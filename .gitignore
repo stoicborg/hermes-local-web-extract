@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+tests/e2e/results/
+*.log
+*.jsonl
+.env

@@ -1,0 +1,72 @@
+name: local-web-extract
+version: 0.1.0
+description: "Tiered web_extract backend: local sidecar (curl_cffi + trafilatura/Readability/pypdf) -> optional Camofox -> optional Tavily. Detects verification walls and bails out early; never solves them. Select with web.extract_backend: local-web-extract."
+author: stoicborg
+license: MIT
+homepage: https://github.com/stoicborg/hermes-local-web-extract
+kind: backend
+requires_hermes: ">=0.23.0"
+provides_web_providers:
+  - local-web-extract
+optional_env:
+  - name: CAMOFOX_URL
+    description: "URL of a camofox-browser server (tier 2). Unset -> tier 2 is skipped."
+  - name: CAMOFOX_API_KEY
+    description: "Bearer token if your camofox-browser server requires one."
+    password: true
+  - name: TAVILY_API_KEY
+    description: "Tavily API key (tier 3). Unset -> tier 3 is skipped."
+    password: true
+config_schema:
+  tiers:
+    type: list
+    default: [sidecar, camofox, tavily]
+    description: Which tiers may run. Order is fixed (sidecar, camofox, tavily).
+  sidecar_url:
+    type: str
+    default: "http://127.0.0.1:18650"
+    description: Base URL of the tier-1 sidecar.
+  sidecar_timeout:
+    type: int
+    default: 40
+    description: Seconds for one sidecar request (download + extraction).
+  sidecar_workers:
+    type: int
+    default: 5
+    description: Parallel sidecar requests per call.
+  min_good_chars:
+    type: int
+    default: 800
+    description: Tier-1 results shorter than this escalate to tier 2.
+  camofox_url:
+    type: str
+    description: camofox-browser URL; falls back to $CAMOFOX_URL.
+  camofox_timeout:
+    type: int
+    default: 30
+    description: Seconds per page in tier 2.
+  min_camofox_chars:
+    type: int
+    default: 300
+    description: Tier-2 text shorter than this counts as failure.
+  tavily_timeout:
+    type: int
+    default: 30
+    description: Seconds for the Tavily batch request.
+  tavily_base_url:
+    type: str
+    default: "https://api.tavily.com"
+  challenge_to_tavily:
+    type: bool
+    default: true
+    description: After a challenge page is detected, still try Tavily (a plain API call).
+  budget_s:
+    type: float
+    default: 110
+    description: Whole-call time budget in seconds.
+  log_enabled:
+    type: bool
+    default: true
+  log_path:
+    type: str
+    description: JSONL tier log; default <HERMES_HOME>/logs/local-web-extract.jsonl.
